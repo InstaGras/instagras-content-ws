@@ -1,52 +1,43 @@
 require('dotenv').config({ path: './.env' })
 
-const AWS = require('aws-sdk');
-const fs = require('fs');
-const path = require('path');
+const express = require('express');
+const hostname = process.env['app.hostname'];
+const port = process.env['app.port'];
+const app = express();
+const bodyParser = require("body-parser");
+const router = express.Router();
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const s3 = require('./s3');
 
-//configuring the S3 environment
-AWS.config.update({
-    accessKeyId: process.env['s3.access_key_id'],
-    secretAccessKey: process.env['s3.secret_access_key'],
-    endpoint: process.env['s3.endpoint'],
-    region: process.env['s3.region']
+//POST
+router.route('/contentws/content')
+  .post(function (req, response) {
+    //routes.createPublication(req, response, client);
+    console.log('post');
+  })
+  .get(function (req, response) {
+    console.log("get");
+    //routes.getPublicationById(req, response, client);
+  })
+
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(helmet());
+app.use(express.json({ limit: '400Mb' })); // Body limiter
+app.use(mongoSanitize()); // Data Sanitization against NoSQL Injection Attacks
+app.use(xss()); // Data Sanitization against XSS attacks
+
+app.use(router, rateLimit({
+  max: 100,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many requests'
+}));
+
+app.listen(port, hostname, function () {
+  console.log("Mon serveur fonctionne sur http://" + hostname + ":" + port);
 });
-
-var s3 = new AWS.S3();
-var filePath = "./test.txt";
-
-//configuring parameters
-const params = {
-    Bucket: process.env['s3.bucket_name'],
-    Body: fs.createReadStream(filePath),
-    Key: path.basename(filePath)
-};
-
-s3.upload(params, function (err, data) {
-    //handle error
-    if (err) {
-        console.log("Error", err);
-    }
-
-    //success
-    if (data) {
-        console.log("Uploaded in:", data.Location);
-    }
-});
-
-const paramsGet = {
-    Bucket: process.env['s3.bucket_name'],
-    Key: path.basename(filePath)
-};
-
-s3.getObject(paramsGet, function (err, data) {
-    //handle error
-    if (err) {
-        console.log("Error", err);
-    }
-
-    //success
-    if (data) {
-        console.log("Loaded in:", data.Body);
-    }
-})
