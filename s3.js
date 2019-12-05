@@ -1,8 +1,8 @@
 require('dotenv').config({ path: './.env' })
 
 const AWS = require('aws-sdk');
-const fs = require('fs');
-const path = require('path');
+const base64js = require('base64-js')
+const uuidv4 = require('uuid/v4')
 
 //configuring the S3 environment
 AWS.config.update({
@@ -14,46 +14,50 @@ AWS.config.update({
 
 const s3 = new AWS.S3();
 
-function getContentById(request,response){
-    const paramsGet = {
+function getContent(request, response) {
+    let params = {
         Bucket: process.env['s3.bucket_name'],
-        Key: path.basename(filePath)
+        Key: request.params.id
     };
-    
-    s3.getObject(paramsGet, function (err, data) {
-        //handle error
+
+    s3.getObject(params, function (err, data) {
         if (err) {
-            console.log("Error", err);
-            response.status(404).json(err)
-        }
-    
-        //success
-        if (data) {
-            console.log("Loaded in:", data.Body);
+            console.log("Error : ", err);
+            response.status(404).json({ "message": err.message });
+        } else if (data) {
+            console.log("Loaded in:", request.params.id);
+            response.status(200).json({ "data": base64js.fromByteArray(data.Body) });
+        } else {
+            console.log("Something went wrong on getting" + request.params.id);
+            response.status(500).json({ "message": "unknown issue" });
         }
     })
 }
 
+function postContent(request, response) {
+    const key = uuidv4();
 
-//configuring parameters
-const params = {
-    Bucket: process.env['s3.bucket_name'],
-    Body: fs.createReadStream(filePath),
-    Key: path.basename(filePath)
-};
+    const params = {
+        Bucket: process.env['s3.bucket_name'],
+        Body: new Buffer(base64js.toByteArray(request.body.data)),
+        Key: key
+    };
 
-s3.upload(params, function (err, data) {
-    //handle error
-    if (err) {
-        console.log("Error", err);
-    }
-
-    //success
-    if (data) {
-        console.log("Uploaded in:", data.Location);
-    }
-});
+    s3.upload(params, function (err, data) {
+        if (err) {
+            console.log("Error : ", err);
+            response.status(400).json({ "message": err.message });
+        } else if (data) {
+            console.log("Saved in:", key);
+            response.status(201).json({ "key": key });
+        } else {
+            console.log("Something went wrong on saving" + key);
+            response.status(500).json({ "message": "unknown issue" });
+        }
+    });
+}
 
 module.exports = {
-    getContentById,
+    getContent,
+    postContent
 }

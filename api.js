@@ -13,20 +13,19 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const s3 = require('./s3');
 
-//POST
 router.route('/contentws/content')
-  .post(function (req, response) {
-    //routes.createPublication(req, response, client);
-    console.log('post');
-  })
-  .get(function (req, response) {
-    console.log("get");
-    //routes.getPublicationById(req, response, client);
+  .post(function (request, response) {
+    s3.postContent(request, response);
+  });
+
+router.route('/contentws/content/:id')
+  .get(function (request, response) {
+    s3.getContent(request, response);
   })
 
 app.use(cors());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+app.use(bodyParser.json({ limit: '50mb', extended: true }));
 app.use(helmet());
 app.use(express.json({ limit: '400Mb' })); // Body limiter
 app.use(mongoSanitize()); // Data Sanitization against NoSQL Injection Attacks
@@ -34,7 +33,7 @@ app.use(xss()); // Data Sanitization against XSS attacks
 
 app.use(router, rateLimit({
   max: 100,
-  windowMs: 60 * 60 * 1000,
+  windowMs: 15 * 60 * 1000,
   message: 'Too many requests'
 }));
 
