@@ -1,7 +1,6 @@
 require('dotenv').config({ path: './.env' })
 
 const AWS = require('aws-sdk');
-const base64js = require('base64-js')
 const uuidv4 = require('uuid/v4')
 
 //configuring the S3 environment
@@ -26,7 +25,7 @@ function getContent(request, response) {
             response.status(404).json({ "message": err.message });
         } else if (data) {
             console.log("Loaded in:", request.params.id);
-            response.status(200).json({ "data": base64js.fromByteArray(data.Body) });
+            response.send(data.Body);
         } else {
             console.log("Something went wrong on getting" + request.params.id);
             response.status(500).json({ "message": "unknown issue" });
@@ -35,11 +34,15 @@ function getContent(request, response) {
 }
 
 function postContent(request, response) {
-    const key = uuidv4();
 
+    if (!request.files.file) {
+        return response.status(400).send({ "message": "No files were uploaded."});
+    }
+
+    const key = uuidv4();
     const params = {
         Bucket: process.env['s3.bucket_name'],
-        Body: new Buffer(base64js.toByteArray(request.body.data)),
+        Body: request.files.file.data,
         Key: key
     };
 

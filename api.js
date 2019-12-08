@@ -11,6 +11,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
+const fileUpload = require('express-fileupload');
 const s3 = require('./s3');
 
 router.route('/contentws/content')
@@ -26,6 +27,7 @@ router.route('/contentws/content/:id')
 app.use(cors());
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(bodyParser.json({ limit: '50mb', extended: true }));
+app.use(fileUpload());
 app.use(helmet());
 app.use(express.json({ limit: '400Mb' })); // Body limiter
 app.use(mongoSanitize()); // Data Sanitization against NoSQL Injection Attacks
