@@ -14,12 +14,12 @@ const xss = require('xss-clean');
 const fileUpload = require('express-fileupload');
 const s3 = require('./s3');
 
-router.route('/contentws/content')
+router.route('/contentws/contents')
   .post(function (request, response) {
     s3.postContent(request, response);
   });
 
-router.route('/contentws/content/:id')
+router.route('/contentws/contents/:id')
   .get(function (request, response) {
     s3.getContent(request, response);
   })
