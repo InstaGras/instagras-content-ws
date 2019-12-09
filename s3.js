@@ -25,7 +25,7 @@ function getContent(request, response) {
             response.status(404).json({ "message": err.message });
         } else if (data) {
             console.log("Loaded in:", request.params.id);
-            response.send(data.Body);
+            response.status(200).json(data.Body);
         } else {
             console.log("Something went wrong on getting" + request.params.id);
             response.status(500).json({ "message": "unknown issue" });
