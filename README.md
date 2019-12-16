@@ -37,6 +37,21 @@ To launch the application, you just have to run the command:
 npm start
 ```
 
+### Utilisation
+
+#### POST
+
+* /contentws/contents : store a content
+  * 201 : Content stored
+  * 400 : Content not found
+  * 500 : Internal Error
+
+#### GET
+
+* /contentws/contents/{id} : retrieve the specified content
+  * 200 : Content retrieved
+  * 500 : Internal Error
+
 ## Deployment
 
 To deploy the application, the hostname should be set to 0.0.0.0.
