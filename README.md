@@ -43,13 +43,14 @@ npm start
 
 * /contentws/contents : store a content
   * 201 : Content stored
-  * 400 : Content not found
+  * 400 : No content
   * 500 : Internal Error
 
 #### GET
 
 * /contentws/contents/{id} : retrieve the specified content
   * 200 : Content retrieved
+  * 404 : Content not found
   * 500 : Internal Error
 
 ## Deployment
